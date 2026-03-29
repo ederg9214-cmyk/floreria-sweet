@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión - Florería Sweet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2e7d32; 
+            --secondary-color: #e91e63; 
+            --accent-color: #f8bbd0;
+            --bg-light: #f4f7f6;
+            --text-dark: #333;
+            --text-light: #666;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); height: 100vh; overflow: hidden; }
+        .hidden { display: none !important; }
+        .btn { padding: 10px 20px; border: none; border-radius: var(--radius); cursor: pointer; font-weight: 600; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn-danger { background-color: #d32f2f; color: white; }
+        
+        /* Login */
+        #login-view { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); position: relative; z-index: 100; }
+        .login-card { background: var(--white); padding: 2.5rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; animation: fadeIn 0.5s ease-out; }
+        .login-logo { font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem; }
+        .login-form input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #eee; border-radius: var(--radius); outline: none; }
+        .login-hint { margin-top: 15px; font-size: 0.85rem; color: var(--text-light); background: #f0f0f0; padding: 10px; border-radius: 8px; text-align: left; }
+
+        /* Dashboard */
+        #dashboard-view { display: flex; height: 100vh; }
+        aside { width: 260px; background: var(--white); display: flex; flex-direction: column; border-right: 1px solid #eee; transition: var(--transition); }
+        .brand { padding: 20px; font-size: 1.5rem; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f0f0f0; }
+        .nav-menu { flex: 1; padding: 20px 0; overflow-y: auto; }
+        .nav-item { padding: 12px 25px; cursor: pointer; color: var(--text-light); display: flex; align-items: center; gap: 12px; transition: var(--transition); border-left: 4px solid transparent; }
+        .nav-item:hover, .nav-item.active { background-color: #f0fdf4; color: var(--primary-color); border-left-color: var(--primary-color); }
+        .user-profile { padding: 20px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--secondary-color); color: white; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        main { flex: 1; padding: 30px; overflow-y: auto; background-color: #f8f9fa; }
+        
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); transition: var(--transition); position: relative; }
+        .card:hover { transform: translateY(-5px); }
+        .card-img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
+        .price { font-size: 1.2rem; font-weight: bold; color: var(--primary-color); }
+
+        .data-table { width: 100%; border-collapse: collapse; background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+        .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .data-table th { background-color: var(--primary-color); color: white; }
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: var(--radius); width: 400px; }
+        
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; }
+        .toast { background: #333; color: white; padding: 12px 24px; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <section id="login-view">
+        <div class="login-card">
+            <div class="login-logo"><i class="fa-solid fa-seedling"></i></div>
+            <h2>Florería Sweet</h2>
+            <p style="margin-bottom: 20px; color: #666;">Sistema de Gestión</p>
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <input type="text" id="username" placeholder="Usuario" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Ingresar</button>
+            </form>
+            <div class="login-hint">
+                <strong>Acceso:</strong><br>
+                Usuario: <code>eder</code><br>
+                Contraseña: <code>perez</code>
+            </div>
+        </div>
+    </section>
+
+    <section id="dashboard-view" class="hidden">
+        <aside id="sidebar">
+            <div class="brand"><i class="fa-solid fa-spa"></i> Sweet</div>
+            <nav class="nav-menu" id="nav-menu-container"></nav>
+            <div class="user-profile">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div class="avatar" id="user-avatar-initials">E</div>
+                    <div>
+                        <div id="welcome-user" style="font-weight: 600;">Eder</div>
+                        <div id="user-role-label" style="font-size: 0.8rem; color: #888;">Admin</div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="btn btn-danger" style="width: 100%; justify-content: center; font-size: 0.8rem;">Cerrar Sesión</button>
+            </div>
+        </aside>
+        <main>
+            <header>
+                <h2 id="page-title">Productos</h2>
+                <div id="cart-indicator" class="hidden" onclick="switchTab('pedidos')" style="cursor:pointer; position:relative;">
+                    <i class="fa-solid fa-cart-shopping fa-lg" style="color: var(--primary-color);"></i>
+                    <span id="cart-count" style="position: absolute; top: -8px; right: -8px; background: var(--secondary-color); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 50%;">0</span>
+                </div>
+            </header>
+            <div id="content-area"></div>
+        </main>
+    </section>
+
+    <script>
+        const db = {
+            users: [
+                { id: 1, name: "Eder", username: "eder", password: "perez", role: "admin", status: "active" },
+                { id: 2, name: "Cliente Invitado", username: "user", password: "123", role: "user", status: "active" }
+            ],
+            products: [
+                { id: 101, name: "Rosa Roja", type: "flower", price: 5.00, img: "https://picsum.photos/seed/rose/300/200" },
+                { id: 102, name: "Girasol", type: "flower", price: 3.50, img: "https://picsum.photos/seed/sunflower/300/200" },
+                { id: 201, name: "Semillas Lavanda", type: "seed", price: 2.50, img: "https://picsum.photos/seed/lavender/300/200" }
+            ],
+            orders: [],
+            customers: [{ id: 1, name: "Carlos Ruiz", email: "carlos@mail.com", location: "Norte" }],
+            locations: ["Norte", "Sur", "Centro"]
+        };
+
+        let currentUser = null;
+        let cart = [];
+
+        function init() {
+            const savedUser = localStorage.getItem('floristeria_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showDashboard();
+            } else {
+                showLogin();
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const userIn = document.getElementById('username').value;
+            const passIn = document.getElementById('password').value;
+            const user = db.users.find(u => u.username === userIn && u.password === passIn);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('floristeria_user', JSON.stringify(user));
+                showToast(`¡Bienvenido ${user.name}!`);
+                showDashboard();
+            } else {
+                showToast("Credenciales incorrectas.", "error");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('floristeria_user');
+            location.reload();
+        }
+
+        function showLogin() {
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('dashboard-view').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            document.getElementById('welcome-user').textContent = currentUser.name;
+            document.getElementById('user-avatar-initials').textContent = currentUser.name[0];
+            renderSidebar();
+            switchTab('productos');
+        }
+
+        function renderSidebar() {
+            const container = document.getElementById('nav-menu-container');
+            container.innerHTML = '';
+            let items = [
+                { id: 'productos', icon: 'fa-box-open', label: 'Productos' },
+                { id: 'semillas', icon: 'fa-seedling', label: 'Semillas' }
+            ];
+            if (currentUser.role === 'admin') {
+                items.push({ id: 'clientes', icon: 'fa-users', label: 'Clientes' });
+                items.push({ id: 'usuarios', icon: 'fa-user-shield', label: 'Gestión' });
+            } else {
+                items.push({ id: 'pedidos', icon: 'fa-cart-shopping', label: 'Mi Carrito' });
+            }
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'nav-item';
+                div.id = `nav-${item.id}`;
+                div.onclick = () => switchTab(item.id);
+                div.innerHTML = `<i class="fa-solid ${item.icon}"></i> ${item.label}`;
+                container.appendChild(div);
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(document.getElementById(`nav-${tabId}`)) document.getElementById(`nav-${tabId}`).classList.add('active');
+            const area = document.getElementById('content-area');
+            area.innerHTML = '';
+            if (tabId === 'productos') renderProducts('flower');
+            else if (tabId === 'semillas') renderProducts('seed');
+            else if (tabId === 'pedidos') renderOrders();
+        }
+
+        function renderProducts(type) {
+            const container = document.createElement('div');
+            container.className = 'grid-container';
+            db.products.filter(p => p.type === type).forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<img src="${p.img}" class="card-img"><h3>${p.name}</h3><span class="price">$${p.price}</span><br><br>
+                <button class="btn btn-primary" onclick="addToCart(${p.id})">Agregar</button>`;
+                container.appendChild(card);
+            });
+            document.getElementById('content-area').appendChild(container);
+        }
+
+        function addToCart(productId) {
+            const product = db.products.find(p => p.id === productId);
+            cart.push(product);
+            document.getElementById('cart-count').textContent = cart.length;
+            document.getElementById('cart-indicator').classList.remove('hidden');
+            showToast(`${product.name} agregado.`);
+        }
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
