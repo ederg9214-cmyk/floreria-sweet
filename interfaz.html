@@ -1,0 +1,36 @@
+  <div class="falling-elements">
+        <span class="item-1">☕</span>
+        <span class="item-2">🍩</span>
+        </div>
+
+    <div id="login-section" class="card">
+        <h1 class="brand-name">Edulce</h1>
+        <p class="slogan">Panel de Control</p>
+        
+        <input type="text" id="userInput" placeholder="Usuario">
+        <input type="password" id="passInput" placeholder="Contraseña">
+        
+        <button onclick="entrar()">Iniciar Sesión</button>
+    </div>
+
+    <div id="dashboard-section" class="card" style="display: none; max-width: 800px;">
+        <h1 class="brand-name">Dashboard Administrativo</h1>
+        
+        <div id="modulos-container">
+            <div class="modulo">
+                <h3>💰 Ventas Totales</h3>
+                <p id="valor-ventas">$0.00</p>
+                <input type="number" id="input-ventas" placeholder="Monto">
+                <button onclick="actualizarVentas()">Sumar</button>
+            </div>
+        </div>
+
+        <button onclick="location.reload()" style="margin-top: 20px; background: #8d6e63;">Salir</button>
+    </div>
+
+    <div id="notification">✅ Acceso Correcto</div>
+
+    <script>
+        // Aquí pondremos las funciones entrar() y actualizarVentas()
+    </script>
+</body>
